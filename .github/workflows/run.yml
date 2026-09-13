@@ -1,0 +1,38 @@
+name: Daily APK Domain Checker
+
+on:
+  schedule:
+    - cron: '00 14 * * *' # Yeh rozana Pakistani waqt ke mutabiq sham 7 baje khud chalega
+  workflow_dispatch:
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 aiohttp
+
+      - name: Run Monitor Script
+        env:
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+          RECEIVER_EMAIL: ${{ secrets.RECEIVER_EMAIL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python monitor.py
+
+      - name: Upload result as backup artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-domain-report
+          path: apk_domains_*.csv
+          retention-days: 14
